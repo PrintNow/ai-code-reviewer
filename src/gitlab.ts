@@ -1,4 +1,5 @@
 import axios, {AxiosInstance} from 'axios';
+import {compareVersions} from "./utils";
 
 
 export interface IGitLabConfig {
@@ -48,6 +49,7 @@ const parseLastDiff = (gitDiff: string) => {
 };
 
 export class GitLab {
+    private gitlabVersion: string = 'latest';
     private apiClient: AxiosInstance;
     private projectId: string;
     private mrId: string;
@@ -67,7 +69,13 @@ export class GitLab {
     }
 
     async init() {
+        this.gitlabVersion = await this.getGitLabVersion();
         await this.getMergeRequestInfo();
+    }
+
+    async getGitLabVersion() {
+        const response = await this.apiClient.get('/version');
+        return response?.data?.version || 'latest';
     }
 
     async getMergeRequestInfo() {
@@ -76,11 +84,22 @@ export class GitLab {
     }
 
     async getMergeRequestChanges() {
-        const response = await this.apiClient.get(`/projects/${this.projectId}/merge_requests/${this.mrId}/diffs`);
-        const changes = response.data?.map((item: Record<string, any>) => {
+        let resource_name = 'changes'
+        if (compareVersions(this.gitlabVersion, '15.7') >= 0) {
+            resource_name = 'diffs'
+        }
+        
+        const response = await this.apiClient.get(`/projects/${this.projectId}/merge_requests/${this.mrId}/${resource_name}`);
+
+        const data = resource_name === 'diffs'
+            ? response.data
+            : response.data.changes;
+
+        const changes = data?.map((item: Record<string, any>) => {
             const {old_line, new_line} = parseLastDiff(item.diff);
             return {...item, old_line, new_line};
         });
+
         return changes;
     }
 

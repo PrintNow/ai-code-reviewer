@@ -54,3 +54,20 @@ export const getLineObj = (matches: RegExpMatchArray, item: string) => {
     }
     return lineObj;
 }
+
+export const compareVersions = (versionA: string, versionB: string): number => {
+    const aParts = versionA.split('.').map(Number);
+    const bParts = versionB.split('.').map(Number);
+
+    const maxLength = Math.max(aParts.length, bParts.length);
+
+    for (let i = 0; i < maxLength; i++) {
+        const partA = aParts[i] || 0;
+        const partB = bParts[i] || 0;
+
+        if (partA > partB) return 1;
+        if (partA < partB) return -1;
+    }
+
+    return 0;
+};
