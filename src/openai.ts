@@ -12,7 +12,7 @@ export class OpenAI {
     private accessTokens: string[];
     private accessTokenIndex = 0;
 
-    constructor(private apiUrl: string, private accessToken: string, private orgId?: string) {
+    constructor(private apiUrl: string, private accessToken: string, private openaiModelName ?: string, private orgId?: string) {
         this.accessTokens = accessToken.split(',');
         const headers: { 'OpenAI-Organization'?: string } = {};
         if (orgId) {
@@ -29,6 +29,11 @@ export class OpenAI {
     async reviewCodeChange(change: string): Promise<string> {
         const newIndex = this.accessTokenIndex = (this.accessTokenIndex >= this.accessTokens.length - 1 ? 0 : this.accessTokenIndex + 1);
         const data: ICompletion = {...openAiCompletionsConfig};
+
+        if (this.openaiModelName) {
+            data.model = this.openaiModelName
+        }
+
         data.messages = [
             systemContent,
             suggestContent,
@@ -37,7 +42,7 @@ export class OpenAI {
                 content: change
             }
         ];
-        const response = await this.apiClient.post('/v1/chat/completions', data, {
+        const response = await this.apiClient.post('/chat/completions', data, {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${this.accessTokens[newIndex]}`
