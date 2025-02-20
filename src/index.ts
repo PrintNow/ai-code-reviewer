@@ -33,13 +33,22 @@ async function run() {
     await gitlab.init().catch(() => {
         console.log('gitlab init error')
     });
+
+    console.log(`>>> GitLab Version: ${gitlab.gitlabVersion}`)
+
+    console.log(`>>> 开始获取[变更]文件内容...`)
     const changes = await gitlab.getMergeRequestChanges().catch(() => {
         console.log('get merge request changes error')
     });
+    console.log(`<<< 完成获取[变更]文件内容...`)
+
+    console.log(`>>> 开始 AI Code Review...`)
+    let i = 0;
     for (const change of changes) {
         if (change.renamed_file || change.deleted_file || !change?.diff?.startsWith('@@')) {
             continue;
         }
+        console.log(`>>> 正在处理第 ${++i} 个文件`)
         const diffBlocks = getDiffBlocks(change?.diff);
         while (!!diffBlocks.length) {
             const item = diffBlocks.shift()!;

@@ -49,7 +49,7 @@ const parseLastDiff = (gitDiff: string) => {
 };
 
 export class GitLab {
-    private gitlabVersion: string = 'latest';
+    public gitlabVersion: string = 'latest';
     private apiClient: AxiosInstance;
     private projectId: string;
     private mrId: string;
